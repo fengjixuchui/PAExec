@@ -17,6 +17,14 @@
 #include <UserEnv.h>
 #include <WtsApi32.h>
 
+////////////////////////////////////////////////////////////////////////
+//
+//v1.29 - April 14, 2021
+//    will connect with given credentials before automatically trying file copy and service installation
+//    support redirected input from file
+//    don't show window if -i flag isn't given
+//    better cleanup of remote service
+//
 
 
 
@@ -79,6 +87,13 @@ int wmain(int argc, wchar_t* argv[], wchar_t* envp[])
 			gLogPath = settings.localLogPath = cmdParser.GetVal(L"lo");
 			if(settings.localLogPath.IsEmpty())
 				Log(L"-lo missing value", true);
+		}
+
+		if (cmdParser.HasKey(L"share"))
+		{
+			settings.targetShare = cmdParser.GetVal(L"share");
+			if (settings.targetShare.IsEmpty())
+				Log(L"-share missing value", true);
 		}
 
 #ifdef _DEBUG
@@ -223,7 +238,7 @@ PerServerCleanup:
 					if(settings.bNeedToDeleteServiceFile)
 						DeletePAExecFromRemote(*cItr, settings);
 					if(settings.bNeedToDetachFromAdmin)
-						EstablishConnection(settings, *cItr, L"ADMIN$", false);
+						EstablishConnection(settings, *cItr, settings.targetShare, false);
 					if(settings.bNeedToDetachFromIPC)
 						EstablishConnection(settings, *cItr, L"IPC$", false);
 					if(false == gbStop) //if stopping, just bail -- the OS will close these (and some of them might be invalid now anyway)
@@ -249,6 +264,11 @@ PerServerCleanup:
 						{
 							CloseHandle(settings.hStdOut);
 							settings.hStdOut = NULL;
+						}
+						if(!BAD_HANDLE(settings.hUserImpersonated))
+						{
+							CloseHandle(settings.hUserImpersonated);
+							settings.hUserImpersonated = NULL;
 						}
 					}
 				}
@@ -315,7 +335,7 @@ void PrintCopyright()
 		verInfo = NULL;
 	}
 
-	Log(StrFormat(L"\r\nPAExec %s - Execute Programs Remotely\r\nCopyright (c) 2012-2013 Power Admin LLC\r\nwww.poweradmin.com/PAExec\r\n", ver), false);
+	Log(StrFormat(L"\r\nPAExec %s - Execute Programs Remotely\r\nCopyright (c) 2012-2021 Power Admin LLC\r\nwww.poweradmin.com/PAExec\r\n", ver), false);
 }
 
 

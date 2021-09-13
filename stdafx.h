@@ -6,6 +6,7 @@
 #pragma once
 
 #define _CRT_SECURE_NO_WARNINGS
+#define _CRT_NON_CONFORMING_WCSTOK
 
 #include "targetver.h"
 
@@ -150,6 +151,7 @@ public:
 		hProcess = INVALID_HANDLE_VALUE;
 		hUserProfile = INVALID_HANDLE_VALUE; //call UnloadUserProfile when done
 		hUser = INVALID_HANDLE_VALUE;
+		hUserImpersonated = INVALID_HANDLE_VALUE;
 		bDisableFileRedirection = false;
 		bODS = false;
 		hStdOut = INVALID_HANDLE_VALUE;
@@ -165,6 +167,8 @@ public:
 		timeoutSeconds = 0;
 		bNoName = false;
 		sessionToInteractWith = (DWORD)-1; //not initialized
+		targetShare = L"ADMIN$";
+		targetSharePath = L"%SYSTEMROOT%";
 	}
 
 	void Serialize(RemMsg& msg, bool bSave)
@@ -328,6 +332,7 @@ public:
 	DWORD processID;
 	HANDLE hUserProfile; //call UnloadUserProfile when done
 	HANDLE hUser;
+	HANDLE hUserImpersonated;
 	CString localLogPath;
 	HANDLE hStdOut;
 	HANDLE hStdIn;
@@ -338,6 +343,8 @@ public:
 	bool bNeedToDeleteService;
 	bool bNoName;
 	CString serviceName;
+	CString targetShare;
+	CString targetSharePath;
 };
 
 class ListenParam
